@@ -286,6 +286,7 @@ void HandleGetListAction(ClientSocket &ToServerSocket, ServerSocket &LocalServer
     auto first = recvList.begin() + 3;
     auto last = recvList.end();
 
+    std::cout << "Account Balance: " << recvList[0] << "\n";
     List(std::vector<std::string>(first, last));
 }
 
@@ -373,14 +374,14 @@ void UpdateUserInfoDict(ClientSocket &ToServerSocket, ServerSocket &LocalServerS
 
 void List(std::vector<std::string> df){
     std::string l10 = "----------";
-    std::cout << "|" << l10 << "|" << l10 << "|" << l10 << "|\n";
-    std::cout << "|" << std::setw(10) << "Username" << "|" << std::setw(10) << "IP" << "|" << std::setw(10) << "Port" << "|" << "\n"; 
+    std::cout << "|" << l10 << "|" << l10 << l10 << "|" << l10 << "|\n";
+    std::cout << "|" << std::setw(10) << "Username" << "|" << std::setw(20) << "IP" << "|" << std::setw(10) << "Port" << "|" << "\n"; 
     for(auto line: df){
         auto tokens = Split(line, "#");
         if(tokens.size() < 3) continue;
-        std::cout << "|" << std::setw(10) << tokens[0] << "|" << std::setw(10) << tokens[1] << "|" << std::setw(10) << tokens[2] << "|" << "\n"; 
+        std::cout << "|" << std::setw(10) << tokens[0] << "|" << std::setw(20) << tokens[1] << "|" << std::setw(10) << tokens[2] << "|" << "\n"; 
     }
-    std::cout << "|" << l10 << "|" << l10 << "|" << l10 << "|\n";
+    std::cout << "|" << l10 << "|" << l10 << l10 << "|" << l10 << "|\n";
 
 }
 
