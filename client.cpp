@@ -276,6 +276,8 @@ void HandleGetListAction(ClientSocket &ToServerSocket, ServerSocket &LocalServer
     // revc from server
     std::string recvMessage = ToServerSocket.Recv();
     auto recvList = Split(recvMessage, "\n");
+    
+    std::cout << "Account Balance: " << recvList[0] << "\n";
 
     if(recvList.size() <= 3){
         std::cout << "[No user online]\n";
@@ -285,8 +287,6 @@ void HandleGetListAction(ClientSocket &ToServerSocket, ServerSocket &LocalServer
     //get list df
     auto first = recvList.begin() + 3;
     auto last = recvList.end();
-
-    std::cout << "Account Balance: " << recvList[0] << "\n";
     List(std::vector<std::string>(first, last));
 }
 
