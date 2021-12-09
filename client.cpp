@@ -100,7 +100,6 @@ std::unordered_map<int, ActionEnum> DisplayChoosingText(){
         actionDict[i+1] = ActionList[i];
 
     }
-    displayStr += "Please enter your numeric choice:  ";
 
     // display text and get user input action
     // display choices
@@ -114,6 +113,9 @@ ActionEnum ChooseAction(){
     //Dispaly choosing text
     auto actionDict = DisplayChoosingText();
 
+    std::cout << "Please enter your numeric choice:  ";
+
+
     // get user valid choice
     std::string choiceStr;
     int choiceInt;
@@ -125,8 +127,13 @@ ActionEnum ChooseAction(){
         try
         {
             choiceInt = std::stoi(choiceStr);
-            // success input
-            break;
+            if(choiceInt > 0 && choiceInt < 6){
+                // success input
+                break;
+            }
+            else{
+                std::cout << "Please enter a value between 1 and " << ActionList.size() << ":   ";
+            }
         }
         catch(const std::exception& e)
         {
@@ -287,6 +294,9 @@ void HandleExitAction(ClientSocket &ToServerSocket, ServerSocket &LocalServerSoc
 
     ToServerSocket.Send("Exit");
     std::string recvMessage = ToServerSocket.Recv();
+
+    // exit
+    exit(0);
 }
 
 void HandleTransactionAction(ClientSocket &ToServerSocket, ServerSocket &LocalServerSocket){
@@ -402,6 +412,8 @@ int main(int argc, char const *argv[])
             ToServerSocket.Send(msg);
 
             DisplayChoosingText();
+            std::cout << "Please enter your numeric choice:  ";
+
         }
     });
 
@@ -414,6 +426,8 @@ int main(int argc, char const *argv[])
         ActionHandling(inputAction, ToServerSocket, LocalServerSocket);
 
     }
+
+    listenPeerJob.join();
 
     return 0;
 }
