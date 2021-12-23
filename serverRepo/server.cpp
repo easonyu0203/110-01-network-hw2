@@ -16,7 +16,6 @@
 
 #include"ulti.h"
 
-using namespace std;
 using namespace std::chrono;
 using namespace std::this_thread;
 
@@ -24,18 +23,18 @@ using namespace std::this_thread;
 #define MaxClientCnt 3
 
 std::string GetPortFromArgs(int argc, char const *argv[]);
-void formalPrint(string title, string content);
+void formalPrint(std::string title, std::string content);
 
 struct UserInfo
 {
-    string Username;
+    std::string Username;
     int AccountBalance;
     bool IsOnline;
-    string Port;
-    string IP;
-    string S2CPort;
+    std::string Port;
+    std::string IP;
+    std::string S2CPort;
 
-    UserInfo(string username = "[No set username]"){
+    UserInfo(std::string username = "[No set username]"){
         Username = username;
         AccountBalance = 10000;
         IsOnline = false;
@@ -46,23 +45,23 @@ struct UserInfo
 
 
 // data
-string ServerPublicKey = "[##AA##]";
-unordered_map<string, UserInfo> userMap;
+std::string ServerPublicKey = "[##AA##]";
+std::unordered_map<std::string, UserInfo> userMap;
 
-string UserListStr(string username){
-    string out = "";
-    out += to_string(userMap[username].AccountBalance) + "\n";
+std::string UserListStr(std::string username){
+    std::string out = "";
+    out += std::to_string(userMap[username].AccountBalance) + "\n";
     out += ServerPublicKey + "\n";
     
     // get all online user
-    vector<UserInfo> onlineUserList;
+    std::vector<UserInfo> onlineUserList;
     for(auto userInfo : userMap){
         if(userInfo.second.IsOnline == true){
             onlineUserList.push_back(userInfo.second);
         }
     }
 
-    out += to_string(onlineUserList.size()) + "\n";
+    out += std::to_string(onlineUserList.size()) + "\n";
     for(UserInfo userInfo : onlineUserList){
         out += userInfo.Username + "#" + userInfo.IP + "#" + userInfo.Port + "\n";
     }
@@ -70,7 +69,7 @@ string UserListStr(string username){
 }
 
 // client request type mutex
-mutex ClientHandlerMutex;
+std::mutex ClientHandlerMutex;
 
 class ClientRequestType
 {
@@ -85,26 +84,26 @@ public:
         Exit,
         Transaction
     };
-    static type GetType(string message){
+    static type GetType(std::string message){
         if(message.substr(0, 8) == "REGISTER") return Register;
-        if(message == string("List")) return GetList;
-        if(message == string("Exit")) return Exit;
+        if(message == std::string("List")) return GetList;
+        if(message == std::string("Exit")) return Exit;
         if(message.find_first_of('#') != message.find_last_of('#')) return Transaction;
-        if(message.find("#") != string::npos) return Login;
-        cout << "client give: [" << message << "] which server cant understand\n"; 
+        if(message.find("#") != std::string::npos) return Login;
+        std::cout << "client give: [" << message << "] which server cant understand\n"; 
         return None;
     }
 
-    static string HandleRegister(string message){
+    static std::string HandleRegister(std::string message){
         // lock up
-        lock_guard<mutex> guard(ClientHandlerMutex);
+        std::lock_guard<std::mutex> guard(ClientHandlerMutex);
 
         // set return client message
-        string returnMessage;
+        std::string returnMessage;
 
         // get userver name
-        string username = message.substr(message.find('#')+1);
-        if(username.find('\n') != string::npos) throw invalid_argument("username contain escape letter");
+        std::string username = message.substr(message.find('#')+1);
+        if(username.find('\n') != std::string::npos) throw std::invalid_argument("username contain escape letter");
 
         // add to data
         // check have this user
@@ -122,16 +121,16 @@ public:
         return returnMessage;
     }
 
-    static string HandleLogin(string message, string clientIp, string clientPort){
+    static std::string HandleLogin(std::string message, std::string clientIp, std::string clientPort){
         // lock up
-        lock_guard<mutex> guard(ClientHandlerMutex);
+        std::lock_guard<std::mutex> guard(ClientHandlerMutex);
 
         // set return client message
-        string returnMessage = "220 AUTH_FAIL\n";
+        std::string returnMessage = "220 AUTH_FAIL\n";
 
         // get username & port
-        string username = message.substr(0, message.find('#'));
-        string portStr = message.substr(message.find('#')+1);
+        std::string username = message.substr(0, message.find('#'));
+        std::string portStr = message.substr(message.find('#')+1);
 
         if(userMap.count(username) == 0){
             formalPrint("Login Fail", "username: " + username + "\nNot register yet");
@@ -149,7 +148,7 @@ public:
             // log out previous on this ip user
             for(auto p : userMap){
                 if(p.second.IP == clientIp && p.second.S2CPort == clientPort && p.second.IsOnline == true){
-                    cout << "this ip, port have already login to other user\n";
+                    std::cout << "this ip, port have already login to other user\n";
                     userMap[p.second.Username].IsOnline = false;
                     break;
                 }
@@ -166,26 +165,26 @@ public:
         return returnMessage;
     }
 
-    static string HandleGetList(string ip, string clientPort){
+    static std::string HandleGetList(std::string ip, std::string clientPort){
         // lock up
-        lock_guard<mutex> guard(ClientHandlerMutex);
-        string returnMessage = "None";
+        std::lock_guard<std::mutex> guard(ClientHandlerMutex);
+        std::string returnMessage = "None";
         for(auto p : userMap){
             if(p.second.IP == ip && p.second.S2CPort == clientPort && p.second.IsOnline == true){
                 returnMessage = UserListStr(p.second.Username);
                 formalPrint("Client Request List", "username: " + p.second.Username);
             }
         }
-        if(returnMessage == string("None")){
+        if(returnMessage == std::string("None")){
             formalPrint("Client Get List Fail", "Not login yet");
         }
         return returnMessage;
     }
 
-    static string HandleExit(string ip, string clientPort){
+    static std::string HandleExit(std::string ip, std::string clientPort){
         // lock up
-        lock_guard<mutex> guard(ClientHandlerMutex);
-        string returnMessage = "None";
+        std::lock_guard<std::mutex> guard(ClientHandlerMutex);
+        std::string returnMessage = "None";
         for(auto p : userMap){
             if(p.second.IP == ip && p.second.S2CPort == clientPort && p.second.IsOnline == true){
                 userMap[p.second.Username].IsOnline = false;
@@ -199,21 +198,21 @@ public:
         return returnMessage;
     }
 
-    static string HandleTransaction(string message, string ip, string clientPort){
+    static std::string HandleTransaction(std::string message, std::string ip, std::string clientPort){
         // lock up
-        lock_guard<mutex> guard(ClientHandlerMutex);
-        string returnMessage = "None";
-        string senderUsername = "";
+        std::lock_guard<std::mutex> guard(ClientHandlerMutex);
+        std::string returnMessage = "None";
+        std::string senderUsername = "";
         for(auto p : userMap){
             if(p.second.IP == ip && p.second.S2CPort == clientPort && p.second.IsOnline == true){
                 senderUsername = p.second.Username;
             }
         }
-        if(senderUsername == string("")){
+        if(senderUsername == std::string("")){
             formalPrint("Transaction Fail", "Client not login");
         }
         else{
-            string aUser, bUser;
+            std::string aUser, bUser;
             int amount;
             size_t i1, i2;
             i1 = message.find('#');
@@ -229,7 +228,7 @@ public:
                 formalPrint("Transaction Success", (
                    "Sender  : " + aUser + "\n" +\
                    "Receiver: " + bUser + "\n" +\
-                   "Amount  : " + to_string(amount) + "\n" 
+                   "Amount  : " + std::to_string(amount) + "\n" 
                 ));
                 userMap[aUser].AccountBalance -= amount;
                 userMap[bUser].AccountBalance += amount;
@@ -266,7 +265,7 @@ int main(int argc, char const *argv[])
 	puts("Waiting for incoming connections...");
     while (true)
     {
-        cout << "Client Cnt: " << ClientHandlerThreads.size() - finishCnt << "\n";
+        std::cout << "Client Cnt: " << ClientHandlerThreads.size() - finishCnt << "\n";
         // accep a new client
         int new_socket, c;
         struct sockaddr_in client;
@@ -275,7 +274,7 @@ int main(int argc, char const *argv[])
 
         if(ClientHandlerThreads.size() - finishCnt >= MaxClientCnt){
             formalPrint("Too Many Client", "can only have 3 clients");
-            string closeMsg = "Close\n";
+            std::string closeMsg = "Close\n";
             write(new_socket, closeMsg.c_str(), closeMsg.size());
             close(new_socket);
         }
@@ -291,7 +290,7 @@ int main(int argc, char const *argv[])
 
                         formalPrint("New Client Connect Event",(
                             "IP  : " + client_ip + "\n"\
-                            "Port: " + to_string(client_port)
+                            "Port: " + std::to_string(client_port)
                         ));
 
                         // open a buffer for recv client data
@@ -307,10 +306,10 @@ int main(int argc, char const *argv[])
                             {
                                 formalPrint("Client disconnected", (
                                     "IP  : " + client_ip + "\n"\
-                                    "Port: " + to_string(client_port)
+                                    "Port: " + std::to_string(client_port)
                                 ));
                                 finishCnt++;
-                                cout << "Client Cnt: " << ClientHandlerThreads.size() - finishCnt << "\n";
+                                std::cout << "Client Cnt: " << ClientHandlerThreads.size() - finishCnt << "\n";
                                 return;
                             }
                             // handle recv fail
@@ -319,8 +318,8 @@ int main(int argc, char const *argv[])
                                 ExitProgram("recv failed");
                             }
 
-                            string clientMessage = string(buffer);
-                            string returnMessage;
+                            std::string clientMessage = std::string(buffer);
+                            std::string returnMessage;
 
                             // handle different client message type
                             switch (ClientRequestType::GetType(clientMessage))
@@ -328,7 +327,7 @@ int main(int argc, char const *argv[])
                             case ClientRequestType::None:
                                 formalPrint("Client Message Invalid",(
                                     "IP  : " + client_ip + "\n"\
-                                    "Port: " + to_string(client_port)       
+                                    "Port: " + std::to_string(client_port)       
                                 ));
                                 break;
                             case ClientRequestType::Register:
@@ -336,19 +335,19 @@ int main(int argc, char const *argv[])
                                 write(new_socket, returnMessage.c_str(), returnMessage.size());
                                 break;
                             case ClientRequestType::Login:
-                                returnMessage = ClientRequestType::HandleLogin(clientMessage, client_ip, to_string(client_port));
+                                returnMessage = ClientRequestType::HandleLogin(clientMessage, client_ip, std::to_string(client_port));
                                 write(new_socket, returnMessage.c_str(), returnMessage.size());
                                 break;
                             case ClientRequestType::GetList:
-                                returnMessage = ClientRequestType::HandleGetList(client_ip, to_string(client_port));
+                                returnMessage = ClientRequestType::HandleGetList(client_ip, std::to_string(client_port));
                                 write(new_socket, returnMessage.c_str(), returnMessage.size());
                                 break;
                             case ClientRequestType::Exit:
-                                returnMessage = ClientRequestType::HandleExit(client_ip, to_string(client_port));
+                                returnMessage = ClientRequestType::HandleExit(client_ip, std::to_string(client_port));
                                 write(new_socket, returnMessage.c_str(), returnMessage.size());
                                 break;
                             case ClientRequestType::Transaction:
-                                returnMessage = ClientRequestType::HandleTransaction(clientMessage, client_ip, to_string(client_port));
+                                returnMessage = ClientRequestType::HandleTransaction(clientMessage, client_ip, std::to_string(client_port));
                                 break;
                             default:
                                 formalPrint("Wrong Formate", "Client send wrong message");
@@ -368,21 +367,21 @@ int main(int argc, char const *argv[])
 }
 
 std::mutex FormalPrintMutex;
-void formalPrint(string title, string content){
+void formalPrint(std::string title, std::string content){
     // lock up 
-    std::lock_guard<mutex> guard(FormalPrintMutex);
+    std::lock_guard<std::mutex> guard(FormalPrintMutex);
 
-    string sep = "||=========================||\n"; // 22
-    string innerSep = "||-------------------------||\n";
+    std::string sep = "||=========================||\n"; // 22
+    std::string innerSep = "||-------------------------||\n";
 
-    cout << "\n" << sep;
-    cout << "||" << setw(25) << left << title << "||\n";
-    cout << innerSep;
+    std::cout << "\n" << sep;
+    std::cout << "||" << std::setw(25) << std::left << title << "||\n";
+    std::cout << innerSep;
     auto lines = Split(content, "\n");
-    for(string line : lines){
-        cout << "||" << setw(25) << left << line << "||\n";
+    for(std::string line : lines){
+        std::cout << "||" << std::setw(25) << std::left << line << "||\n";
     }
-    cout << sep;
+    std::cout << sep;
 }
 
 
