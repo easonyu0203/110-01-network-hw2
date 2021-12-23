@@ -21,6 +21,7 @@ using namespace std::chrono;
 using namespace std::this_thread;
 
 #define BufferSize 1024 * 100
+#define MaxClientCnt 3
 
 std::string GetPortFromArgs(int argc, char const *argv[]);
 void formalPrint(string title, string content);
@@ -242,6 +243,9 @@ public:
 };
 
 
+int finishCnt = 0;
+//Accept and incoming connection
+std::vector<std::thread> ClientHandlerThreads;
 // arg
 // port
 int main(int argc, char const *argv[])
@@ -260,94 +264,102 @@ int main(int argc, char const *argv[])
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0) ExitProgram("bind failed");
 	listen(socket_desc , 3);
 	puts("Waiting for incoming connections...");
-
-
-	//Accept and incoming connection
-    std::vector<std::thread> ClientHandlerThreads;
     while (true)
     {
+        cout << "Client Cnt: " << ClientHandlerThreads.size() - finishCnt << "\n";
         // accep a new client
         int new_socket, c;
         struct sockaddr_in client;
         c = sizeof(struct sockaddr_in);
         new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c);
 
-        // client connected, handle communication
-        ClientHandlerThreads.emplace_back(
-            std::thread(
-                [=](){
-                    if (new_socket<0) ExitProgram("accept failed");
+        if(ClientHandlerThreads.size() - finishCnt >= MaxClientCnt){
+            formalPrint("Too Many Client", "can only have 3 clients");
+            string closeMsg = "Close\n";
+            write(new_socket, closeMsg.c_str(), closeMsg.size());
+            close(new_socket);
+        }
+        else{
+            // client connected, handle communication
+            ClientHandlerThreads.emplace_back(
+                std::thread(
+                    [=](){
+                        if (new_socket<0) ExitProgram("accept failed");
 
-                    std::string client_ip = inet_ntoa(client.sin_addr);
-                    int client_port = ntohs(client.sin_port);
+                        std::string client_ip = inet_ntoa(client.sin_addr);
+                        int client_port = ntohs(client.sin_port);
 
-                    formalPrint("New Client Connect Event",(
-                        "IP  : " + client_ip + "\n"\
-                        "Port: " + to_string(client_port)
-                    ));
+                        formalPrint("New Client Connect Event",(
+                            "IP  : " + client_ip + "\n"\
+                            "Port: " + to_string(client_port)
+                        ));
 
-                    // open a buffer for recv client data
-                    char buffer[BufferSize + 1];
+                        // open a buffer for recv client data
+                        char buffer[BufferSize + 1];
 
-                    // waiting client send request
-                    while(true){
-                    	memset(buffer, 0, BufferSize + 1);
-                        ssize_t read_size = recv(new_socket, buffer, BufferSize, 0);
+                        // waiting client send request
+                        while(true){
+                            memset(buffer, 0, BufferSize + 1);
+                            ssize_t read_size = recv(new_socket, buffer, BufferSize, 0);
 
-                        // handle disconnect
-                        if(read_size == 0)
-                        {
-                            formalPrint("Client disconnected", (
-                                "IP  : " + client_ip + "\n"\
-                                "Port: " + to_string(client_port)
-                            ));
-                            return;
-                        }
-                        // handle recv fail
-                        else if(read_size == -1)
-                        {
-                            ExitProgram("recv failed");
-                        }
+                            // handle disconnect
+                            if(read_size == 0)
+                            {
+                                formalPrint("Client disconnected", (
+                                    "IP  : " + client_ip + "\n"\
+                                    "Port: " + to_string(client_port)
+                                ));
+                                finishCnt++;
+                                cout << "Client Cnt: " << ClientHandlerThreads.size() - finishCnt << "\n";
+                                return;
+                            }
+                            // handle recv fail
+                            else if(read_size == -1)
+                            {
+                                ExitProgram("recv failed");
+                            }
 
-                        string clientMessage = string(buffer);
-                        string returnMessage;
+                            string clientMessage = string(buffer);
+                            string returnMessage;
 
-                        // handle different client message type
-                        switch (ClientRequestType::GetType(clientMessage))
-                        {
-                        case ClientRequestType::None:
-                            formalPrint("Client Message Invalid",(
-                                "IP  : " + client_ip + "\n"\
-                                "Port: " + to_string(client_port)       
-                            ));
-                            break;
-                        case ClientRequestType::Register:
-                            returnMessage = ClientRequestType::HandleRegister(clientMessage);
-                            write(new_socket, returnMessage.c_str(), returnMessage.size());
-                            break;
-                        case ClientRequestType::Login:
-                            returnMessage = ClientRequestType::HandleLogin(clientMessage, client_ip, to_string(client_port));
-                            write(new_socket, returnMessage.c_str(), returnMessage.size());
-                            break;
-                        case ClientRequestType::GetList:
-                            returnMessage = ClientRequestType::HandleGetList(client_ip, to_string(client_port));
-                            write(new_socket, returnMessage.c_str(), returnMessage.size());
-                            break;
-                        case ClientRequestType::Exit:
-                            returnMessage = ClientRequestType::HandleExit(client_ip, to_string(client_port));
-                            write(new_socket, returnMessage.c_str(), returnMessage.size());
-                            break;
-                        case ClientRequestType::Transaction:
-                            returnMessage = ClientRequestType::HandleTransaction(clientMessage, client_ip, to_string(client_port));
-                            break;
-                        default:
-                            formalPrint("Wrong Formate", "Client send wrong message");
-                            break;
+                            // handle different client message type
+                            switch (ClientRequestType::GetType(clientMessage))
+                            {
+                            case ClientRequestType::None:
+                                formalPrint("Client Message Invalid",(
+                                    "IP  : " + client_ip + "\n"\
+                                    "Port: " + to_string(client_port)       
+                                ));
+                                break;
+                            case ClientRequestType::Register:
+                                returnMessage = ClientRequestType::HandleRegister(clientMessage);
+                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                break;
+                            case ClientRequestType::Login:
+                                returnMessage = ClientRequestType::HandleLogin(clientMessage, client_ip, to_string(client_port));
+                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                break;
+                            case ClientRequestType::GetList:
+                                returnMessage = ClientRequestType::HandleGetList(client_ip, to_string(client_port));
+                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                break;
+                            case ClientRequestType::Exit:
+                                returnMessage = ClientRequestType::HandleExit(client_ip, to_string(client_port));
+                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                break;
+                            case ClientRequestType::Transaction:
+                                returnMessage = ClientRequestType::HandleTransaction(clientMessage, client_ip, to_string(client_port));
+                                break;
+                            default:
+                                formalPrint("Wrong Formate", "Client send wrong message");
+                                break;
+                            }
                         }
                     }
-                }
-            )
-        );
+                )
+            );
+
+        }
     }
 
     for(auto& t : ClientHandlerThreads) {t.join();}

@@ -73,5 +73,10 @@ std::string ClientSocket::Recv(){
 		ExitProgram("socket recv data failed");
 	}
 
-	return std::string(_buffer);
+	std::string msg = std::string(_buffer);
+	if(msg == "Close\n"){
+		ExitProgram("Server connection is full, disconnect to server");
+	}
+
+	return msg;
 }

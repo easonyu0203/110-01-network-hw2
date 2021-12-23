@@ -6,6 +6,7 @@
 #include<stdexcept>
 #include<utility> // std::pair
 #include <iomanip>
+#include<unistd.h>	//write
 
 #include"clientSocket.h"
 #include"serverSocket.h"
