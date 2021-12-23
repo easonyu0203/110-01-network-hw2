@@ -52,6 +52,7 @@
         "thread": "cpp",
         "__bit_reference": "cpp",
         "__hash_table": "cpp",
-        "__split_buffer": "cpp"
+        "__split_buffer": "cpp",
+        "unordered_set": "cpp"
     }
 }

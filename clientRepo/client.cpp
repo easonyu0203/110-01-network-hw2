@@ -256,8 +256,12 @@ void HandleLoginAction(ClientSocket &ToServerSocket, ServerSocket &LocalServerSo
     auto recvList = Split(recvMessage, "\n");
 
     if(recvList.size() <= 3){
+        std::cout << "Login Fail\n";
         std::cout << "[No user online]\n";
         return;
+    }
+    else{
+        std::cout << "Login Success\n";
     }
 
     //get list df
@@ -341,7 +345,6 @@ void HandleTransactionAction(ClientSocket &ToServerSocket, ServerSocket &LocalSe
     ToPeerSocket.Send(msg);
 
     // receive confirm from server
-    ToServerSocket.Recv();
     std::cout << "Transaction success!\n";
 }
 
