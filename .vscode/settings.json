@@ -53,6 +53,25 @@
         "__bit_reference": "cpp",
         "__hash_table": "cpp",
         "__split_buffer": "cpp",
-        "unordered_set": "cpp"
-    }
+        "unordered_set": "cpp",
+        "__bits": "cpp",
+        "__config": "cpp",
+        "__debug": "cpp",
+        "__errc": "cpp",
+        "__functional_base": "cpp",
+        "__locale": "cpp",
+        "__mutex_base": "cpp",
+        "__node_handle": "cpp",
+        "__nullptr": "cpp",
+        "__string": "cpp",
+        "__threading_support": "cpp",
+        "__tuple": "cpp",
+        "bitset": "cpp",
+        "complex": "cpp",
+        "ios": "cpp",
+        "locale": "cpp",
+        "mutex": "cpp",
+        "__functional_03": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

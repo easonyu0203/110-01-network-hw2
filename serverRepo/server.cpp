@@ -271,13 +271,15 @@ int main(int argc, char const *argv[])
         struct sockaddr_in client;
         c = sizeof(struct sockaddr_in);
         new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c);
-
+        
+        // check max client limit
         if(ClientHandlerThreads.size() - finishCnt >= MaxClientCnt){
             formalPrint("Too Many Client", "can only have 3 clients");
             std::string closeMsg = "Close\n";
             write(new_socket, closeMsg.c_str(), closeMsg.size());
             close(new_socket);
         }
+        
         else{
             // client connected, handle communication
             ClientHandlerThreads.emplace_back(
