@@ -8,33 +8,31 @@
 #include<random>
 #include<tuple>
 
-using namespace std;
-
 int prime(long int); //function to check for prime number
-tuple<int, int, int, int> encryption_key();
+std::tuple<int, int, int, int> encryption_key();
 long int cd(int e, int t);
-string encrypt(string msg, int e,int n);
-string decrypt(string en, int d, int n);
-pair<int, int> getXY();
+std::string encrypt(std::string msg, int e,int n);
+std::string decrypt(std::string en, int d, int n);
+std::pair<int, int> getXY();
 std::vector<std::string> Split(std::string str, std::string delimiter);
 
-int main()
-{
-   auto[n,t,e,d] = encryption_key();
+// int main()
+// {
+//    auto[n,t,e,d] = encryption_key();
 
-   cout << "\nENTER MESSAGE OR STRING TO ENCRYPT\n";
-   string msg;
-   getline(cin, msg);
+//    std::cout << "\nENTER MESSAGE OR STRING TO ENCRYPT\n";
+//    std::string msg;
+//    getline(std::cin, msg);
    
-   string en = encrypt(msg, e, n);
-   cout << en << endl;
-   cout << decrypt(en, d, n) << endl;
-   return 0;
-} //end of the main program
+//    std::string en = encrypt(msg, e, n);
+//    std::cout << en << std::endl;
+//    std::cout << decrypt(en, d, n) << std::endl;
+//    return 0;
+// } //end of the main program
 
-pair<int, int> getXY(){
-   pair<int, int> xy;
-   vector<int> vec;
+std::pair<int, int> getXY(){
+   std::pair<int, int> xy;
+   std::vector<int> vec;
 
    std::random_device dev;
    std::mt19937 rng(dev());
@@ -50,6 +48,8 @@ pair<int, int> getXY(){
          if(vec.size() == 2){
             xy.first = vec[0];
             xy.second = vec[1];
+            xy.first = 11;
+            xy.second = 13;
             return xy;
          }
       }
@@ -70,7 +70,7 @@ int prime(long int pr)
  }
 
 //function to generate encryption key
-tuple<int, int, int, int> encryption_key()
+std::tuple<int, int, int, int> encryption_key()
 {
    auto [x, y] = getXY();
    int n, t, e, d, flag;
@@ -78,14 +78,14 @@ tuple<int, int, int, int> encryption_key()
    flag = prime(x);
    if(flag == 0)
    {
-      cout << "\nINVALID INPUT\n";
+      std::cout << "\nINVALID INPUT\n";
       exit(0);
    }
 
    flag = prime(y);
    if(flag == 0 || x == y)
    {
-      cout << "\nINVALID INPUT\n";
+      std::cout << "\nINVALID INPUT\n";
       exit(0);
    }
 
@@ -109,7 +109,7 @@ tuple<int, int, int, int> encryption_key()
       }
    }
 
-   return make_tuple(n, t, e, d);
+   return std::make_tuple(n, t, e, d);
 }
 
 long int cd(int a, int t)
@@ -124,10 +124,10 @@ long int cd(int a, int t)
 }
 
 //function to encrypt the message
-string encrypt(string msg, int e,int n)
+std::string encrypt(std::string msg, int e,int n)
 {
-   vector<long int> temp(msg.length());
-   string en = msg;
+   std::vector<long int> temp(msg.length());
+   std::string en = msg;
    int pt, ct, key = e, k, len;
    int i = 0;
    len = msg.length();
@@ -150,7 +150,7 @@ string encrypt(string msg, int e,int n)
 
    en += "@";
    for(int i = 0; i < temp.size(); i++){
-      en += (to_string(temp[i]));
+      en += (std::to_string(temp[i]));
       if(i != temp.size() - 1){
          en += ",";
       }
@@ -160,16 +160,16 @@ string encrypt(string msg, int e,int n)
 }
 
 //function to decrypt the message
-string decrypt(string en, int d, int n)
+std::string decrypt(std::string en, int d, int n)
 {
-   string tempstr = en.substr(en.find('@') + 1);
+   std::string tempstr = en.substr(en.find('@') + 1);
    en = en.substr(0, en.find('@'));
-   vector<long int> temp;
-   string msg = en;
+   std::vector<long int> temp;
+   std::string msg = en;
    int pt, ct, key = d, k;
 
    std::vector<std::string> tmpList = Split(tempstr, ",");
-   for(string s : tmpList){
+   for(std::string s : tmpList){
       temp.push_back(stoi(s));
    }
 
@@ -190,16 +190,16 @@ string decrypt(string en, int d, int n)
    return msg;
 }
 
-std::vector<std::string> Split(std::string str, std::string delimiter){
-    std::vector<std::string> out;
+// std::vector<std::string> Split(std::string str, std::string delimiter){
+//     std::vector<std::string> out;
 
-    size_t pos = 0;
-    std::string token;
-    while ((pos = str.find(delimiter)) != std::string::npos) {
-        token = str.substr(0, pos);
-        out.push_back(token);
-        str.erase(0, pos + delimiter.length());
-    }
-    out.push_back(str);
-    return out;
-}
+//     size_t pos = 0;
+//     std::string token;
+//     while ((pos = str.find(delimiter)) != std::string::npos) {
+//         token = str.substr(0, pos);
+//         out.push_back(token);
+//         str.erase(0, pos + delimiter.length());
+//     }
+//     out.push_back(str);
+//     return out;
+// }

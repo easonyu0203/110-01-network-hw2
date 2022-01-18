@@ -4,7 +4,7 @@
 #include<sys/socket.h>
 #include<netdb.h>	//hostent
 #include<arpa/inet.h>
-#include<unistd.h>	//write
+#include<unistd.h>	//sslWrite
 #include <thread>  
 #include <vector>
 #include <chrono>
@@ -241,6 +241,7 @@ public:
     }
 };
 
+#include"rsa.cpp"
 
 int finishCnt = 0;
 //Accept and incoming connection
@@ -298,6 +299,29 @@ int main(int argc, char const *argv[])
                         // open a buffer for recv client data
                         char buffer[BufferSize + 1];
 
+                        // ssl set up
+                        int n, e, d;
+                        auto keys = encryption_key();
+                        n = std::get<0>(keys);
+                        e = std::get<2>(keys);
+                        d = std::get<3>(keys);
+                        // recv client ssl data
+                        memset(buffer, 0, BufferSize + 1);
+                        ssize_t read_size = recv(new_socket, buffer, BufferSize, 0);
+                        std::string clientMessage = std::string(buffer);
+                        int clientD = std::stoi(clientMessage.substr(0, clientMessage.find('@')));
+                        int clientN = std::stoi(clientMessage.substr(clientMessage.find('@')+1));
+                        // send server ssl data
+                        std::string msg = "";
+                        msg = std::to_string(d) + "@" + std::to_string(n);
+                        send(new_socket, msg.c_str(), msg.length(), 0);
+
+
+                        auto sslWrite = [=](std::string msg){
+                            msg = encrypt(msg, e, n);
+                            write(new_socket, msg.c_str(), msg.size());
+                        };
+
                         // waiting client send request
                         while(true){
                             memset(buffer, 0, BufferSize + 1);
@@ -321,8 +345,9 @@ int main(int argc, char const *argv[])
                             }
 
                             std::string clientMessage = std::string(buffer);
+                            clientMessage = decrypt(clientMessage, clientD, clientN);
                             std::string returnMessage;
-
+ 
                             // handle different client message type
                             switch (ClientRequestType::GetType(clientMessage))
                             {
@@ -334,19 +359,20 @@ int main(int argc, char const *argv[])
                                 break;
                             case ClientRequestType::Register:
                                 returnMessage = ClientRequestType::HandleRegister(clientMessage);
-                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+
+                                sslWrite(returnMessage);
                                 break;
                             case ClientRequestType::Login:
                                 returnMessage = ClientRequestType::HandleLogin(clientMessage, client_ip, std::to_string(client_port));
-                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                sslWrite(returnMessage);
                                 break;
                             case ClientRequestType::GetList:
                                 returnMessage = ClientRequestType::HandleGetList(client_ip, std::to_string(client_port));
-                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                sslWrite(returnMessage);
                                 break;
                             case ClientRequestType::Exit:
                                 returnMessage = ClientRequestType::HandleExit(client_ip, std::to_string(client_port));
-                                write(new_socket, returnMessage.c_str(), returnMessage.size());
+                                sslWrite(returnMessage);
                                 break;
                             case ClientRequestType::Transaction:
                                 returnMessage = ClientRequestType::HandleTransaction(clientMessage, client_ip, std::to_string(client_port));

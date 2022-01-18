@@ -18,19 +18,19 @@ string decrypt(string en, int d, int n);
 pair<int, int> getXY();
 std::vector<std::string> Split(std::string str, std::string delimiter);
 
-int main()
-{
-   auto[n,t,e,d] = encryption_key();
+// int main()
+// {
+//    auto[n,t,e,d] = encryption_key();
 
-   cout << "\nENTER MESSAGE OR STRING TO ENCRYPT\n";
-   string msg;
-   getline(cin, msg);
+//    cout << "\nENTER MESSAGE OR STRING TO ENCRYPT\n";
+//    string msg;
+//    getline(cin, msg);
    
-   string en = encrypt(msg, e, n);
-   cout << en << endl;
-   cout << decrypt(en, d, n) << endl;
-   return 0;
-} //end of the main program
+//    string en = encrypt(msg, e, n);
+//    cout << en << endl;
+//    cout << decrypt(en, d, n) << endl;
+//    return 0;
+// } //end of the main program
 
 pair<int, int> getXY(){
    pair<int, int> xy;
@@ -50,6 +50,8 @@ pair<int, int> getXY(){
          if(vec.size() == 2){
             xy.first = vec[0];
             xy.second = vec[1];
+            xy.first = 11;
+            xy.second = 13;
             return xy;
          }
       }
@@ -190,16 +192,16 @@ string decrypt(string en, int d, int n)
    return msg;
 }
 
-std::vector<std::string> Split(std::string str, std::string delimiter){
-    std::vector<std::string> out;
+// std::vector<std::string> Split(std::string str, std::string delimiter){
+//     std::vector<std::string> out;
 
-    size_t pos = 0;
-    std::string token;
-    while ((pos = str.find(delimiter)) != std::string::npos) {
-        token = str.substr(0, pos);
-        out.push_back(token);
-        str.erase(0, pos + delimiter.length());
-    }
-    out.push_back(str);
-    return out;
-}
+//     size_t pos = 0;
+//     std::string token;
+//     while ((pos = str.find(delimiter)) != std::string::npos) {
+//         token = str.substr(0, pos);
+//         out.push_back(token);
+//         str.erase(0, pos + delimiter.length());
+//     }
+//     out.push_back(str);
+//     return out;
+// }
